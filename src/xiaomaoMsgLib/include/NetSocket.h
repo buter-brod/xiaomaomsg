@@ -14,7 +14,8 @@ class NetSocket {
 public:
 	NetSocket();
 
-	bool Connect(const std::string& url, const Block block = Block::BLOCKING);
+	bool Connect(const std::string& url);
+	bool Listen(const std::string& url, const Block block = Block::BLOCKING);
 
 	std::string Receive(const Block block = Block::BLOCKING);
 	bool Send(const std::string& msg, const Block block = Block::NON_BLOCKING);

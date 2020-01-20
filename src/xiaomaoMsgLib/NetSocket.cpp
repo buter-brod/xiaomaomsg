@@ -1,6 +1,5 @@
 #include "NetSocket.h"
-#include "nng/protocol/reqrep0/req.h"
-#include <string>
+#include "nng/protocol/pair0/pair.h"
 
 NetSocket::NetSocket() {
 	init();
@@ -8,7 +7,7 @@ NetSocket::NetSocket() {
 
 bool NetSocket::init() {
 
-	const auto reqOpenResult = nng_req0_open(&_socket);
+	const auto reqOpenResult = nng_pair0_open(&_socket);
 	const bool succeed = (reqOpenResult == 0);
 	if (!succeed) {
 		reportInternalError(reqOpenResult);
@@ -40,9 +39,24 @@ bool NetSocket::close() {
 	return true;
 }
 
-bool NetSocket::Connect(const std::string& url, const Block block) {
+bool NetSocket::Listen(const std::string& url, const Block block) {
+	
+	// todo make sure nonblocking listening works as well!
 
-	const int flags = block == Block::BLOCKING ? 0 : NNG_FLAG_NONBLOCK;
+	const int flags = 0;
+	const auto listenResult = nng_listen(_socket, url.c_str(), nullptr, flags);
+	const bool listenOk = listenResult == 0;
+
+	if (!listenOk) {
+		reportInternalError(listenResult, "nng_listen failed", "NetSocket::Listen");
+	}
+
+	return listenOk;
+}
+
+bool NetSocket::Connect(const std::string& url) {
+
+	const int flags = 0;
 	const auto dialResult = nng_dial(_socket, url.c_str(), &_dialer, flags);
 	const bool dialOk = dialResult == 0;
 

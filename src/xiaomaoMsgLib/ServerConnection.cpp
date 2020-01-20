@@ -2,7 +2,18 @@
 #include "MessageProtocol.h"
 #include <map>
 
-static std::string defaultAuthURL() {return "tcp://127.0.0.1:50051";}
+static const std::string defaultProtocolStr = "ws";
+static const std::string defaultPortStr = "50051";
+static const std::string localhostStr = "127.0.0.1";
+
+std::string getURL(const std::string& protocolStr, const std::string& portStr, const std::string& ipStr) {
+	return protocolStr + "://" + localhostStr + ":" + portStr;
+}
+
+static std::string defaultAuthURL() {
+	const std::string& url = getURL(defaultProtocolStr, defaultPortStr, localhostStr);
+	return url;
+}
 
 ServerConnection* ServerConnection::_instance = nullptr;
 
@@ -348,11 +359,19 @@ bool ServerConnection::tryAuth(const Block block) {
 		logErr("unable to get auth server reply", "ServerConnection::tryAuth");
 		return false;
 	}
-	
-	rabbit::document authReplyJson;
-	authReplyJson.parse(authReplyStr);
 
-	const std::string& replyMsg = authReplyJson.has("message") ? (authReplyJson["message"].as_string()) : ("");
+	std::string replyMsg;
+	rabbit::document authReplyJson;
+	
+	try {
+		authReplyJson.parse(authReplyStr);
+		replyMsg = authReplyJson.has("message") ? (authReplyJson["message"].as_string()) : ("");
+	}
+	catch (rabbit::parse_error& pErr) {
+		logErr("unable to parse auth reply json: " + authReplyStr, "ServerConnection::tryAuth");
+		return false;
+	}
+
 	const bool replyOk = replyMsg == "OK";
 
 	if (!replyOk) {
@@ -390,7 +409,7 @@ bool ServerConnection::tryAuth(const Block block) {
 bool ServerConnection::connectAuth(const Block block) {
 	logMsg("will try connect to auth server", "ServerConnection::connectAuth");
 	const auto& authURL = getAuthURL();
-	const bool connected = _sockAuth->Connect(authURL, block);
+	const bool connected = _sockAuth->Connect(authURL);
 	
 	if (!connected) {
 		logErr("auth not connected", "ServerConnection::connectGame");
@@ -403,7 +422,7 @@ bool ServerConnection::connectGame(const Block block) {
 	
 	logMsg("will try connect to game server", "ServerConnection::connectGame");
 	const auto& gameURL = getGameURL();
-	const bool connected = _sockGame->Connect(gameURL, block);
+	const bool connected = _sockGame->Connect(gameURL);
 
 	if (!connected) {
 		logErr("game not connected", "ServerConnection::connectGame");
