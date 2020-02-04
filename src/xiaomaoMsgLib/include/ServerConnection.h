@@ -8,6 +8,7 @@
 
 constexpr unsigned int secondsToRetryInitial = 1;
 
+//#define NO_TLS
 #include "NetSocket.h"
 
 class ServerConnection {

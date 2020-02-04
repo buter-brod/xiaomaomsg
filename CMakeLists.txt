@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.1)
 
 project(xiaomaoMsg)
 
+if(UNIX AND NOT APPLE)
+	set(LINUX TRUE)
+else()
+endif()
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR})
@@ -27,6 +32,14 @@ file(GLOB XIAOMAOMSGAPP_SRC
 add_library(xiaomaoMsgLib STATIC ${XIAOMAOMSGLIB_SRC} )
 
 set(NNG_STATIC_LIB ON)
+
+
+if(LINUX)
+	set(MBEDTLS_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR}/3rdparty/mbedtls/linux)
+else()
+	set(MBEDTLS_ROOT_DIR ${CMAKE_CURRENT_LIST_DIR}/3rdparty/mbedtls/win64)
+endif()
+
 add_subdirectory(3rdparty/nng)
 
 set_property(DIRECTORY ${CMAKE_CURRENT_LIST_DIR} PROPERTY VS_STARTUP_PROJECT xiaomaoMsgApp)

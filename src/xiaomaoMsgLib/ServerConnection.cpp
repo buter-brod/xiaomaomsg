@@ -1,8 +1,17 @@
 #include "ServerConnection.h"
 #include "MessageProtocol.h"
-#include <map>
 
-static const std::string defaultProtocolStr = "ws";
+#include <map>
+#include <fstream>
+#include <streambuf>
+
+#ifdef NO_TLS
+static const std::string defaultProtocolStr = "tcp";
+#else
+static const std::string defaultProtocolStr = "tls+tcp";
+const std::string certFilename = "../xiaomao.crt";
+#endif
+
 static const std::string defaultPortStr = "50051";
 static const std::string localhostStr = "127.0.0.1";
 
@@ -68,6 +77,27 @@ bool ServerConnection::destroySockets() {
 	return true;
 }
 
+//todo: move to utils!
+std::string loadFile(const std::string& filename) {
+	std::ifstream t(filename);
+
+	const bool openOk = t.is_open();
+
+	if (!openOk) {
+		return "";
+	}
+
+	std::string str;
+
+	t.seekg(0, std::ios::end);
+	str.reserve(t.tellg());
+	t.seekg(0, std::ios::beg);
+
+	str.assign((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+
+	return str;
+}
+
 bool ServerConnection::initSockets() {
 
 	if (_sockAuth) {
@@ -82,6 +112,15 @@ bool ServerConnection::initSockets() {
 
 	_sockAuth = std::make_unique<NetSocket>();
 	_sockGame = std::make_unique<NetSocket>();
+
+	
+#ifndef NO_TLS
+	const std::string& serverCertificate = loadFile(certFilename);
+	_sockAuth->SetCertificate(serverCertificate);
+
+	//todo: should be separate certificates?
+	_sockGame->SetCertificate(serverCertificate);
+#endif
 
 	return true;
 }
