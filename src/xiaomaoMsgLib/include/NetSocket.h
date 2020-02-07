@@ -1,8 +1,10 @@
 #ifndef NETSOCKET_H
 #define NETSOCKET_H
 
-#include "nng/nng.h"
 #include "NetworkLog.h"
+#include "utils.h"
+
+static const std::string tlsStr = "tls+";
 
 enum class Block {
 	NON_BLOCKING = 0,
@@ -13,12 +15,13 @@ class NetSocket {
 
 public:
 	NetSocket();
+	virtual ~NetSocket();
 
-	bool Connect(const std::string& url_);
-	bool Listen(const std::string& url_, const Block block = Block::BLOCKING);
+	virtual bool Connect(const std::string& url_);
+	virtual bool Listen(const std::string& url_, const Block block = Block::BLOCKING);
 
-	std::string Receive(const Block block = Block::BLOCKING);
-	bool Send(const std::string& msg, const Block block = Block::NON_BLOCKING);
+	virtual std::string Receive(const Block block = Block::BLOCKING);
+	virtual bool Send(const std::string& msg, const Block block = Block::NON_BLOCKING);
 
 	const ErrorMessage::Ptr& GetError() const;
 
@@ -27,16 +30,13 @@ public:
 	void SetCertificate(const std::string& cert);
 #endif
 
+	static bool needTLS(const std::string& url) {
+		const bool need = url.find(tlsStr) != std::string::npos;
+		return need;
+	}
+
 protected:
-	bool init();
-	bool close();
-
-#ifndef NO_TLS
-	bool initTLSServerCfg();
-	bool initTLSClientCfg();
-#endif
-
-	std::string urlCheckTLS(const std::string& url) const;
+	virtual bool close();
 
 	std::string getStrId() const;
 
@@ -44,17 +44,15 @@ protected:
 	void reportError(const int code, const int errSubCode, const std::string& what = "", const std::string& where = "", const int priority = LogMessage::NORMAL) const;
 	void reportError(const std::string& what = "", const std::string& where = "", const int priority = LogMessage::NORMAL) const ;
 
-private:
-	nng_socket _socket{ NNG_SOCKET_INITIALIZER };
-	nng_dialer _dialer{ NNG_DIALER_INITIALIZER };
-	nng_listener _listener {NNG_LISTENER_INITIALIZER };
-
+protected:
 #ifndef NO_TLS
 	std::string _privateKey;
 	std::string _certificate;
 #endif
 
+private:
 	mutable ErrorMessage::Ptr _latestErr;
+	Utils::IdType _id{0};
 };
 
 #endif

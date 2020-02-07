@@ -1,5 +1,5 @@
 #include <iostream>
-#include "NetSocket.h"
+#include "NNGSocket.h"
 
 #include <fstream>
 #include <streambuf>
@@ -28,7 +28,7 @@ std::string loadFile(const std::string& filename) {
 
 int server(const char* url)
 {
-	auto sockAuth = std::make_unique<NetSocket>();
+	auto sockAuth = std::make_unique<NNGSocket>();
 
 	const std::string& certificate = loadFile("../xiaomao.crt");
 	const std::string& privateKey = loadFile("../xiaomao.key");

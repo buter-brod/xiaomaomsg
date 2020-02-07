@@ -2,8 +2,8 @@
 #include "MessageProtocol.h"
 
 #include <map>
-#include <fstream>
-#include <streambuf>
+
+//#define NO_TLS
 
 #ifdef NO_TLS
 static const std::string defaultProtocolStr = "tcp";
@@ -77,27 +77,6 @@ bool ServerConnection::destroySockets() {
 	return true;
 }
 
-//todo: move to utils!
-std::string loadFile(const std::string& filename) {
-	std::ifstream t(filename);
-
-	const bool openOk = t.is_open();
-
-	if (!openOk) {
-		return "";
-	}
-
-	std::string str;
-
-	t.seekg(0, std::ios::end);
-	str.reserve(t.tellg());
-	t.seekg(0, std::ios::beg);
-
-	str.assign((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
-
-	return str;
-}
-
 bool ServerConnection::initSockets() {
 
 	if (_sockAuth) {
@@ -110,12 +89,12 @@ bool ServerConnection::initSockets() {
 		return false;
 	}
 
-	_sockAuth = std::make_unique<NetSocket>();
-	_sockGame = std::make_unique<NetSocket>();
+	_sockAuth = std::make_unique<NNGSocket>();
+	_sockGame = std::make_unique<NNGSocket>();
 
 	
 #ifndef NO_TLS
-	const std::string& serverCertificate = loadFile(certFilename);
+	const std::string& serverCertificate = Utils::loadFile(certFilename);
 	_sockAuth->SetCertificate(serverCertificate);
 
 	//todo: should be separate certificates?

@@ -9,7 +9,7 @@
 constexpr unsigned int secondsToRetryInitial = 1;
 
 //#define NO_TLS
-#include "NetSocket.h"
+#include "NNGSocket.h"
 
 class ServerConnection {
 public:
@@ -77,8 +77,8 @@ private:
 
 	mutable ErrorMessage::Ptr _latestErr;
 
-	std::unique_ptr<NetSocket> _sockAuth;
-	std::unique_ptr<NetSocket> _sockGame;
+	std::unique_ptr<NNGSocket> _sockAuth;
+	std::unique_ptr<NNGSocket> _sockGame;
 	// todo: add 'observer' socket. Having just 1 req/rep socket is not sufficient as server needs a way to notify us about some events
 
 	std::string _authURL;
